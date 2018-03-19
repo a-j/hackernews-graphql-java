@@ -11,11 +11,13 @@ import javax.servlet.annotation.WebServlet;
 @WebServlet(urlPatterns = "/graphql")
 public class GraphQLEndpoint extends SimpleGraphQLServlet {
     private static final LinkRepository linkRepository;
+    private static final UserRepository userRepository;
 
     static {
         // Pass string argument "mongodb://<host>:<port>/hackernews" to MongoClient if not running locally
         MongoDatabase mongo = new MongoClient().getDatabase("hackernews");
         linkRepository = new LinkRepository(mongo.getCollection("links"));
+        userRepository = new UserRepository(mongo.getCollection("users"));
     }
 
     public GraphQLEndpoint() {
@@ -25,7 +27,7 @@ public class GraphQLEndpoint extends SimpleGraphQLServlet {
     private static GraphQLSchema buildSchema() {
         return SchemaParser.newParser()
                 .file("schema.graphqls")
-                .resolvers(new Query(linkRepository), new Mutation(linkRepository))
+                .resolvers(new Query(linkRepository), new Mutation(linkRepository, userRepository))
                 .build()
                 .makeExecutableSchema();
     }
